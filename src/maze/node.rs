@@ -1,104 +1,43 @@
-#![allow(dead_code)]
-
 use crate::TILE_SIZE;
 
-#[derive(PartialEq)]
-pub enum NodeState {
-    Empty, // used when a node is not a wall and has not been visited
-    Wall, // used for walls
-    Closed, // used when a node has been visited
-    Open, // used when a node is allowed to be visited
-    Best // only used for redering the final path
-}
-
+#[derive(Clone, PartialEq)]
 pub struct MazeNode {
-    pub cordinate: (u32, u32),
+    pub cordinate: (i32, i32),
     pub location: (f64, f64),
-    pub state: NodeState,
-    pub fCost: u32,
-    distanceTraveled: u32,
-    parent: Option<Box<MazeNode>>,
+    pub f_cost: Option<i32>,
+    pub distanceTraveled: i32,
+    //pub parent: Option<Box<MazeNode>>,
 }
 
 impl MazeNode {
-    pub fn new(x: u32, y: u32, state: NodeState) -> MazeNode { //parent: Option<MazeNode>
+    pub fn new(x: i32, y: i32) -> MazeNode { //parent: Option<MazeNode>
         MazeNode {
             cordinate: (x, y),
             location: ((TILE_SIZE * x) as f64, (TILE_SIZE * y) as f64),
-            state: state,
-            fCost: 0,
+            f_cost: Option::None,
             distanceTraveled: 0,
-            parent: Option::None,
         }
     }
 
     
-    fn calculateFCost(&self) -> u32 {
-        let mut fCost: u32 = 0;
+    pub fn calculate_and_update_f_cost(&mut self, parent_distance: i32, goal: &(i32, i32)) {
+        let mut fCost: i32 = 0;
 
-        if let Some(parent) = &self.parent {
-            fCost += parent.distanceTraveled;
+        fCost += parent_distance;
 
-            let (x, y) = self.cordinate;
-            //let (parentX, parentY) = Self::float_tuple_to_point(parent.location.to_tuple());
+        let (x, y) = self.cordinate;
 
-            if x > y {
-                fCost += (y) * 14;
-                fCost += (x - y) * 10;
-            } else {
-                fCost += (x) * 14;
-                fCost += (y - x) * 10;
-            }
+        let x_dist = (x - goal.0).abs();
+        let y_dist = (y - goal.1).abs();
 
-            fCost
+        if x_dist > y_dist {
+            fCost += (y_dist) * 14;
+            fCost += (x_dist - y_dist) * 10;
         } else {
-            todo!();
-        }    
+            fCost += (x_dist) * 14;
+            fCost += (y_dist - x_dist) * 10;
+        }
+        self.f_cost = Some(fCost);
+        self.distanceTraveled = parent_distance + 10; 
     }
-
-    /*
-    fn openNode(xIndex: i32, yIndex: i32) {
-        //THIS DECLARATION OF PARENT NODE IS WRONG, never mind i think it is right
-        open.add(Node(xIndex, yIndex, closed[closed.size - 1], -1, -1)) //this doesnt work if there is nothing in closed
-        val current = open[open.size - 1]
-        current.fCost = calculateFCost(current)
-        current.distanceTraveled = current.parent!!.distanceTraveled + 10
-    }
-
-    fn closeNode(current: Node) {
-        closed.add(current)
-
-        //check if current Objects.node is end
-
-        //-----open adjacent if they arnt walls------
-        //north
-        var newOpenX = current.xIndex
-        var newOpenY = current.yIndex - 1
-        if (newOpenY > 0 && !walls[newOpenX][newOpenY] && checkIfOpen(newOpenX, newOpenY)) {
-            openNode(newOpenX, newOpenY)
-        }
-
-        //east
-        newOpenX = current.xIndex - 1
-        newOpenY = current.yIndex
-        if (newOpenX > 0 && !walls[newOpenX][newOpenY] && checkIfOpen(newOpenX, newOpenY)) {
-            openNode(newOpenX, newOpenY)
-        }
-
-        //south
-        newOpenX = current.xIndex
-        newOpenY = current.yIndex + 1
-        if (newOpenY < 65 && !walls[newOpenX][newOpenY] && checkIfOpen(newOpenX, newOpenY)) {
-            openNode(newOpenX, newOpenY)
-        }
-
-        //west
-        newOpenX = current.xIndex + 1
-        newOpenY = current.yIndex
-        if (newOpenX < 65 && !walls[newOpenX][newOpenY] && checkIfOpen(newOpenX, newOpenY)) {
-            openNode(newOpenX, newOpenY)
-        }
-        open.remove(current)
-    }
-    */
 }

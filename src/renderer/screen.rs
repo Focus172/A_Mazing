@@ -18,8 +18,8 @@ impl Screen {
     pub fn new(opengl: OpenGL, image_path: &str) -> Result<Screen, Box<dyn std::error::Error>> {
 
         let image = ImageReader::open(image_path)?.decode()?;
-        let width: u32 = TILE_SIZE * image.width();
-        let height: u32 = TILE_SIZE * image.height();
+        let width: u32 = TILE_SIZE as u32 * image.width();
+        let height: u32 = TILE_SIZE as u32 * image.height();
 
         Ok(Screen {
             is_running: true,

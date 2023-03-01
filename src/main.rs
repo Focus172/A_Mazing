@@ -11,9 +11,6 @@ mod screen;
 #[path ="renderer/renderer.rs"]
 mod renderer;
 
-#[path ="renderer/window.rs"]
-mod window;
-
 #[path ="solver/solver.rs"]
 mod solver;
 
@@ -28,18 +25,18 @@ use screen::Screen;
 use std::thread::sleep;
 use std::time::Duration;
 
-const TILE_SIZE: u32 = 10;
+const TILE_SIZE: i32 = 2;
 
 fn main() {
     // Change this to OpenGL::V2_1 if not working.
     let opengl = OpenGL::V3_2;
 
-    let image_path = "./inp1.png";
+    let image_path = "./inp2.png";
     let mut screen = Screen::new(opengl, image_path)
         .expect("Error creating screen");
 
     while screen.is_running {
-        sleep(Duration::from_millis(5));
+        sleep(Duration::from_millis(1));
         let res = screen.update();
         
         match res {

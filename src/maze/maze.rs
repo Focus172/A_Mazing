@@ -1,76 +1,68 @@
-use crate::node::NodeState;
 use image::DynamicImage;
 use crate::node::MazeNode;
-use crate::TILE_SIZE;
+//use crate::TILE_SIZE;
 
 pub struct Maze {
     pub width: u32,
     pub height: u32,
-    pub tiles: Vec<MazeNode>, 
+    pub empty: Vec<MazeNode>, 
+    pub walls: Vec<MazeNode>,
+    pub open: Vec<MazeNode>,
+    pub closed: Vec<MazeNode>,
+    //pub best: Vec<MazeNode>,
 }
 
 impl Maze {
     pub fn new(image: DynamicImage) -> Maze {
+
+        let (walls, empty) : (Vec<MazeNode>, Vec<MazeNode>) =  Self::initialize_titles(&image);
+
         Maze {
             width: image.height(),
             height: image.width(),
-            tiles: initialize_titles(&image),
+            empty: empty,
+            walls: walls,
+            open: Vec::new(),
+            closed: Vec::new(),
+            //best: Vec::new(),
         }
     }
 
-    pub fn _close_and_open_around(&mut self, mut to_close: MazeNode) { // this needs to take the real node to keep the compiler happy
-
-        to_close.state = NodeState::Closed;
-
-        let (cur_x, cur_y) = to_close.cordinate;
-
-        self.tiles.iter_mut().for_each(|node| {
-            match node.state {
-                NodeState::Empty => {
-                    if (cur_x+1, cur_y) == node.cordinate { node.state = NodeState::Open; }
-                    if (cur_x-1, cur_y) == node.cordinate { node.state = NodeState::Open; }
-                    if (cur_x, cur_y+1) == node.cordinate { node.state = NodeState::Open; }
-                    if (cur_x, cur_y-1) == node.cordinate { node.state = NodeState::Open; }
-                },
-                _ => { }
-            }
-        });
-
-        // the tile needs to have moved out of the vector to be in this method
-        // so we can just do the good work of pushing it back in
-        self.tiles.push(to_close);
+    // should only be called once
+    pub fn find_and_pop_first_node(&mut self) -> MazeNode {
+        self.empty.remove(0)
     }
 
-    pub fn find_first_node(&mut self) -> &mut MazeNode {
-        self.tiles.iter_mut()
-        .find(|node| {
-            node.state == NodeState::Empty
-        }).unwrap()
+    pub fn copy_last_node(&mut self) -> MazeNode {
+        let last = self.empty.pop().unwrap();
+        let copy = last.clone();
+        self.empty.push(last);
+        copy
+    }
+
+    fn initialize_titles(image: &DynamicImage) -> (Vec<MazeNode>, Vec<MazeNode>) {
+        let rows = image.width() as i32;
+        //let cols = image.width();
+    
+        let mut count = 0;
+
+        let mut walls: Vec<MazeNode> = Vec::new();
+        let mut empty: Vec<MazeNode> = Vec::new();
+    
+        image.to_rgb8().pixels().into_iter()
+            .for_each(|&pixel| {
+                let x: i32 = count % rows;
+                let y: i32 = count / rows;
+                count += 1;
+    
+                if pixel.0[0] == 0 {
+                    walls.push(MazeNode::new(x, y));
+                } else {
+                    empty.push(MazeNode::new(x, y));
+                }
+                
+            });
+
+        (walls, empty)
     }
 }
-
-fn initialize_titles(image: &DynamicImage) -> Vec<MazeNode> {
-    let rows = image.height();
-    //let cols = image.width();
-
-    let mut count = 0;
-
-    image.to_rgb8().pixels().into_iter()
-        .map(|&pixel| {
-            let x: u32 = (count % rows);
-            let y: u32 = (count / rows);
-            count += 1;
-
-            //print!("{:?}", pixel);
-            if pixel.0[0] == 0 {
-                println!("this is a wall");
-                MazeNode::new(x, y, NodeState::Wall)
-            } else {
-                println!("this is a empty");
-                MazeNode::new(x, y, NodeState::Empty)
-            }
-            
-        })
-        .collect()
-}
-
